@@ -54,7 +54,7 @@ It does **not** implement the full Ertragswertverfahren or Vergleichswertverfahr
 
 | File | Use in this project |
 | --- | --- |
-| `ImmoWertV.pdf` / `HowTo/ImmoWertV.pdf` | §§ 35–39, Anlage 1 (GND), Anlage 2 (RND model), Anlage 4 (NHK structure). |
+| ImmoWertV ([official PDF](https://www.gesetze-im-internet.de/immowertv_2022/ImmoWertV.pdf)) | §§ 35–39, Anlage 1 (GND), Anlage 2 (RND model), Anlage 4 (NHK structure). |
 | `HowTo/Bekanntmachung der Richtlinie zu rErmittlung des Sachwerts.pdf` | Sachwertrichtlinie: workflow, Ausstattungsstufe, Außenanlagen, Marktanpassung, Modernisierungspunkte. |
 | `HowTo/10. Gesamtnutzungsdauer und Restnutzungsdauer.pdf` | Explanation of GND/RND concepts and the effect of modernization. |
 | Supplied worked Sachwert example (file name intentionally omitted here) | Main worked example; all example values and the Wohnungsrecht calculation. |

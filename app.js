@@ -2198,7 +2198,7 @@
             paragraphs: [
               "ImmoWertV § 38 (Auszug): „Der Alterswertminderungsfaktor entspricht dem Verhältnis der Restnutzungsdauer zur Gesamtnutzungsdauer.“ ImmoWertV § 37 (Auszug): „Der vorläufige Sachwert der für die jeweilige Gebäudeart üblichen baulichen Außenanlagen und sonstigen Anlagen ist gesondert zu ermitteln, soweit die Anlagen wertbeeinflussend sind und nicht bereits anderweitig erfasst wurden.“",
               "Lehrbuch „Gesamtnutzungsdauer und Restnutzungsdauer“ (Auszug): „Die Restnutzungsdauer (RND) ist diejenige zu erwartende Lebensdauer eines Gebäudes, während der dieses noch wirtschaftlich sinnvoll zu nutzen ist.“ „Die Gesamtnutzungsdauer ist sozusagen die Restnutzungsdauer im Moment der Fertigstellung des Gebäudes.“ Die Linearmethode und das Modell der Anlage 2 ImmoWertV werden für mehr als einen Modernisierungspunkt gegenübergestellt; die Alterswertminderung ist stets RND ÷ GND.",
-              "Anlage 2 zu § 12 Abs. 5 ImmoWertV, Tabelle 3 (Auszug): „ab einem relativen Alter von“. Die Modellformel gilt erst ab dem für die Modernisierungspunktzahl genannten relativen Alter; darunter bleibt RND = GND − Alter. Die Tabelle steht in ImmoWertV.pdf und online bei gesetze-im-internet.de (ImmoWertV 2022).",
+              "Anlage 2 zu § 12 Abs. 5 ImmoWertV, Tabelle 3 (Auszug): „ab einem relativen Alter von“. Die Modellformel gilt erst ab dem für die Modernisierungspunktzahl genannten relativen Alter; darunter bleibt RND = GND − Alter. Die Tabelle steht in der offiziellen ImmoWertV-Fassung bei gesetze-im-internet.de (ImmoWertV 2022).",
               "Anlage 2, II.2 (Auszug): „Liegt das relative Alter unterhalb des in der Tabelle 3 angegebenen Wertes, gilt für die Ermittlung der Restnutzungsdauer die Formel: RND = GND − Alter.“ Das ist der Grund für die Grenze: unterhalb wird linear gerechnet, ab dem Tabellenwert wird die Modellformel angewendet.",
               tr("Nach Tabelle 2 der Anlage 2 ImmoWertV ergibt sich aus {points} Modernisierungspunkten der Modernisierungsgrad {grade} ({range}).", {
                 points: decimal(result.rnd.points, 0),
@@ -2239,7 +2239,7 @@
           {
             heading: "9. Quellenverzeichnis",
             paragraphs: [
-              "ImmoWertV (Fassung 2021, in Kraft seit 01.01.2022), insbesondere §§ 6–9, 21–23, 35–39, 46–47: https://www.gesetze-im-internet.de/immowertv_2022/ImmoWertV.pdf ; lokal: ImmoWertV.pdf.",
+              "ImmoWertV (Fassung 2021, in Kraft seit 01.01.2022), insbesondere §§ 6–9, 21–23, 35–39, 46–47: https://www.gesetze-im-internet.de/immowertv_2022/ImmoWertV.pdf.",
               "Sachwertrichtlinie (SW-RL) vom 05.09.2012, insbesondere Nr. 3–6 und Anlagen 1–5: lokal: HowTo/Bekanntmachung der Richtlinie zu rErmittlung des Sachwerts.pdf.",
               "Grundstücksmarktbericht Ratingen 2026, Kap. 5.1.5 Sachwertfaktoren und Kap. 7.1 Sachwertverfahren: https://www.boris.nrw.de/borisfachdaten/gmb/2026/GMB_27300_2026.pdf ; lokal: Grundstuecksmarktbericht/Grundstuecksmarktbericht_Ratingen_2026.pdf.",
               "Grundstücksmarktbericht Ratingen 2025, vergleichbare Auswertung: https://www.boris.nrw.de/borisfachdaten/gmb/2025/GMB_27300_2025.pdf ; lokal: Grundstuecksmarktbericht/Grundstücksmarktbericht Ratingen 2025.pdf.",
