@@ -43,6 +43,15 @@
         <button type="button" class="btn btn-small btn-primary" id="loadExampleBtn">An der Lilie 51</button>
         <p class="sidebar-hint">Das Beispiel aus dem Gutachten wird vollständig vorbefüllt.</p>
       </div>
+      <div class="sidebar-footer">
+        <div class="mini-label">Hilfsmittel</div>
+        <div class="resource-links">
+          <a href="https://www.boris.nrw.de/boris-nrw/?lang=de" target="_blank" rel="noopener noreferrer">BORISplus.NRW ↗</a>
+          <a href="https://www.tim-online.nrw.de/tim-online2/" target="_blank" rel="noopener noreferrer">TIM-Online NRW ↗</a>
+          <a href="https://www.gars.nrw/ratingen/produkte-du/grundstuecksmarktbericht-ra" target="_blank" rel="noopener noreferrer">Gutachterausschuss Ratingen ↗</a>
+          <a href="Grundstuecksmarktbericht/Grundstuecksmarktbericht_Ratingen_2026.pdf" target="_blank" rel="noopener noreferrer">Marktbericht 2026 (PDF) ↗</a>
+        </div>
+      </div>
     </aside>
 
     <main class="content">
@@ -97,6 +106,11 @@
 
         <div class="card">
           <div class="card-title">Bodenrichtwert</div>
+          <div class="help-links">
+            <span>Quellen:</span>
+            <a href="https://www.boris.nrw.de/boris-nrw/?lang=de" target="_blank" rel="noopener noreferrer">BORISplus.NRW – Bodenrichtwertabfrage ↗</a>
+            <a href="Grundstuecksmarktbericht/Grundstuecksmarktbericht_Ratingen_2026.pdf" target="_blank" rel="noopener noreferrer">Marktbericht 2026, Kap. 4.5 ↗</a>
+          </div>
           <div class="grid grid-3">
             <label class="field">Marktbericht
               <select id="brwReportSelect">
@@ -109,6 +123,7 @@
             </label>
             <label class="field">Bodenrichtwert (€/m²)
               <input type="number" min="0" step="1" data-field="land.brw">
+              <small>Die Vorgaben sind gebietstypische Durchschnitte. Für das konkrete Flurstück bitte den BRW in BORISplus.NRW prüfen.</small>
             </label>
           </div>
           <label class="field">Zu-/Abschlag für mikrolage und Grundstücksbeschaffenheit (%)
