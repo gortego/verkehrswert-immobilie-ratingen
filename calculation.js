@@ -82,19 +82,21 @@
     var rnd = linearRnd;
     var method = "linear (GND - Alter)";
 
-    // Up to one point is treated as "not modernised" (SW-RL, Anlage 4).
-    if (points > 1) {
-      var params = DATA.rndParameters[points] || DATA.rndParameters[20];
-      var relativeAge = age / gnd;
-      if (relativeAge <= params.abRelAlter) {
-        var modelled = (params.a * age * age) / gnd - params.b * age + params.c * gnd;
-        rnd = clamp(Math.max(linearRnd, modelled), 0, 1.7 * gnd);
-        method = "ImmoWertV-Anlage-2-Modell (" + points + " Punkte)";
-      } else {
-        method = "linear (relatives Alter über dem Anwendungsbereich des RND-Modells)";
-        if (warnings) {
-          warnings.push({ level: "info", text: "Bei " + Math.round(relativeAge * 100) + "% relativem Alter ist das Modernisierungsmodell nicht anwendbar; die lineare RND wurde verwendet." });
-        }
+    // ImmoWertV 2022, Anlage 2, II.1: the Modernisierungspunktzahl from I
+    // (0–20 points) is used in the II.2 formula. Tabelle 3: "ab einem
+    // relativen Alter von" — the formula applies from the listed relative
+    // age upwards; below it RND = GND - Alter. The old SW-RL treatment of
+    // 0–1 points as "nicht modernisiert" is not used here.
+    var params = DATA.rndParameters[points] || DATA.rndParameters[20];
+    var relativeAge = age / gnd;
+    if (relativeAge >= params.abRelAlter) {
+      var modelled = (params.a * age * age) / gnd - params.b * age + params.c * gnd;
+      rnd = clamp(Math.max(linearRnd, modelled), 0, 1.7 * gnd);
+      method = "ImmoWertV-Anlage-2-Modell (" + points + " Punkte)";
+    } else {
+      method = "linear (relatives Alter unter dem Anwendungsbereich des RND-Modells)";
+      if (warnings) {
+        warnings.push({ level: "info", text: "Bei " + Math.round(relativeAge * 100) + "% relativem Alter liegt das Modernisierungsmodell noch außerhalb des Anwendungsbereichs (ab " + Math.round(params.abRelAlter * 100) + "%); die lineare RND wurde verwendet." });
       }
     }
 
@@ -190,6 +192,82 @@
     return factorResult;
   }
 
+  // Existing tenancies are treated as a besonderes objektspezifisches
+  // Grundstücksmerkmal (§ 8 Abs. 3 ImmoWertV). Only the difference between
+  // contract rent and market rent is capitalised over the period in which the
+  // owner cannot adjust it. This is a transparency aid, not a full
+  // Ertragswertverfahren.
+  function calcTenancy(state, baseValue, rnd, warnings) {
+    var t = state.tenancy || {};
+    var empty = {
+      enabled: false, correction: 0, before: baseValue, after: baseValue,
+      annualDiff: 0, years: 0, pvFactor: 0, share: 1, monthlyDiff: 0
+    };
+    if (!t.enabled) return empty;
+
+    warnings.push({ level: "info", text: "Bei vermieteten Objekten ist das Ertragswertverfahren regelmäßig das Regelverfahren. Die Mietkorrektur im Sachwert ist eine Plausibilisierung; Verfahrenswahl und Modellkonformität des Sachwertfaktors sind zu begründen (§ 6 Abs. 1, § 10 ImmoWertV)." });
+
+    var actual = num(t.actualRent, 0);
+    var market = num(t.marketRent, 0);
+    if (actual <= 0 || market <= 0) {
+      warnings.push({ level: "warn", text: "Mietverhältnis aktiv, aber Ist- oder Marktmiete fehlt. Es wurde keine Korrektur berechnet." });
+      return empty;
+    }
+
+    var scope = t.scope === "part" ? "part" : "whole";
+    var living = Math.max(0, num(state.building && state.building.livingArea, 0));
+    var rented = Math.max(0, num(t.rentedArea, 0));
+    var share = scope === "part" ? (living > 0 ? clamp(rented / living, 0, 1) : 0) : 1;
+    if (scope === "part" && living <= 0) {
+      warnings.push({ level: "warn", text: "Für die Teilvermietung fehlt die Wohnfläche. Es wurde keine Korrektur berechnet." });
+      return empty;
+    }
+
+    var years = Math.max(0, Math.min(
+      num(t.adjustmentYears, 3),
+      num(t.remainingTerm, 0) + num(t.noticeMonths, 0) / 12,
+      rnd
+    ));
+    if (years <= 0) {
+      warnings.push({ level: "warn", text: "Die wirksame Anpassungsdauer des Mietverhältnisses ist 0 Jahre. Es wurde keine Korrektur berechnet." });
+      return empty;
+    }
+
+    var rate = Math.max(0, num(t.discountRate, 0)) / 100;
+    var pvFactor = rate > 0 ? (1 - Math.pow(1 + rate, -years)) / rate : years;
+    var monthlyDiff = market - actual; // positive = Mindermiete
+    var annualDiff = monthlyDiff * 12 * share;
+    var risk = clamp(num(t.riskPct, 0), 0, 100) / 100;
+    var correction = -annualDiff * pvFactor * (1 - risk);
+    var cap = Math.abs(baseValue) * 0.30;
+    if (Math.abs(correction) > cap) {
+      warnings.push({ level: "warn", text: "Die Mietkorrektur übersteigt 30 % des marktangepassten Sachwerts und wurde begrenzt. Bitte sachverständig prüfen." });
+      correction = clamp(correction, -cap, cap);
+    }
+    if (Math.abs(monthlyDiff / market) > 0.10) {
+      warnings.push({ level: "warn", text: "Die Ist-Miete weicht um mehr als 10 % von der Marktmiete ab: besondere Ertragsverhältnisse nach § 8 Abs. 3 Nr. 1 ImmoWertV. Marktmiete und Laufzeit bitte belegen." });
+    }
+    if (state.wohnrecht && state.wohnrecht.enabled) {
+      warnings.push({ level: "warn", text: "Mietverhältnis und unentgeltliches Wohnungsrecht sind gleichzeitig aktiv. Bitte sicherstellen, dass dieselbe Fläche/Periode nicht doppelt korrigiert wird." });
+    }
+
+    return {
+      enabled: true,
+      scope: scope,
+      share: share,
+      actualRent: actual,
+      marketRent: market,
+      monthlyDiff: monthlyDiff,
+      annualDiff: annualDiff,
+      years: years,
+      pvFactor: pvFactor,
+      riskPct: num(t.riskPct, 0),
+      correction: correction,
+      before: baseValue,
+      after: baseValue + correction
+    };
+  }
+
   function calculate(state, warnings) {
     warnings = warnings || [];
     var land = state.land || {};
@@ -242,7 +320,9 @@
     var preliminary = buildingAndOutdoor + landValue + deductionsTotal;
 
     var factor = getSachwertfaktor(state, preliminary, warnings);
-    var marketValue = preliminary * factor.final;
+    var marketAdaptedValue = preliminary * factor.final;
+    var tenancy = calcTenancy(state, marketAdaptedValue, rndResult.rnd, warnings);
+    var marketValue = tenancy.after;
     var roundedValue = Math.round(marketValue / 1000) * 1000;
 
     var comparison = num(state.plausibility && state.plausibility.comparisonValue, 0);
@@ -279,6 +359,8 @@
       landValue: landValue,
       preliminary: preliminary,
       factor: factor,
+      marketAdaptedValue: marketAdaptedValue,
+      tenancy: tenancy,
       marketValue: marketValue,
       roundedValue: roundedValue,
       plausibilityAverage: plausibilityAverage

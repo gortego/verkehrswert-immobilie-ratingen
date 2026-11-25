@@ -41,6 +41,8 @@ Bodenwert = BRW_adj × A_eff
 
 The Übertiefe coefficient is selected from the table in `data.js`. Values above 50 m produce a warning because the published table ends there.
 
+The UI offers a generated offline BORIS snapshot for Ratingen (`data/boris-ratingen.js`, 2020–2026 zones). It only includes `ENTW=B` zones with residential/mixed `NUTA` codes (W/WR/WA/WB/WS/M/MD/MDW/MI/MU), excluding agricultural and forest BRWs that are meaningless for this tool. Selecting a zone or map point immediately fills `BRW`, stores its Stichtag and WNUM, syncs the Ortsteil/PLZ filter, and shows the zone's BRW history in a small chart/table. The chart draws a solid line through the actual BRWs and a dashed, lighter one-year continuation from a least-squares linear trend; it is labelled as a "Prognose", is not an official Bodenrichtwert and is never used in the Sachwert calculation. The forecast value is `mean(BRW) + slope × (forecast year − mean year)`, where the slope comes from the least-squares fit over all available Stichtage of the same WNUM; it is rounded to whole €/m² and clipped to `0…2× the highest observed BRW`. The field stays editable, so any value can be overwritten manually; overwritten values are highlighted and the history panel then shows a manual-value note instead of the BORIS series. Gemarkung/Flur/Flurstück are optional identifiers from TIM/ALKIS and are not part of the BORIS BRW dataset, so the matching zone must be selected manually.
+
 ---
 
 ## 3. Ausstattungsstufe and NHK
@@ -49,7 +51,7 @@ The Übertiefe coefficient is selected from the table in `data.js`. Values above
 Standardstufe = Σ (Stufe_i × Gewicht_i)
 ```
 
-Weights sum to 1.0. The result is linearly interpolated between the five NHK cost levels of the selected building type:
+Weights sum to 1.0. Each Gewerk is entered in 0.5 steps (NHK 2010 itself defines whole levels 1–5; the half steps are a documented interpolation aid). The result is linearly interpolated between the five NHK cost levels of the selected building type:
 
 ```text
 HK_base = level[n] + (Standardstufe − n) × (level[n+1] − level[n])
@@ -67,7 +69,7 @@ HK_corr = HK_base × Regionalfaktor
           + Σ(Zuschläge_nicht_in_BGF) / BGF
 ```
 
-The MFH apartment-size correction follows the spreadsheet model:
+The MFH apartment-size correction follows the embedded reference model:
 
 ```text
 f = WF/WE × (−0.0017647 × WF/WE + 1.088235) / 100
@@ -80,6 +82,8 @@ f = WF/WE × (−0.0017647 × WF/WE + 1.088235) / 100
 ```text
 HK_indexed = HK_corr × I
 ```
+
+Presets for `I` are derived from Destatis GENESIS table 61261-0002 (quarterly Wohngebäude index, 2021=100) as `index / 70.8` for the NHK 2010 base year; any value can be entered manually.
 
 If `roundNhk` is enabled, `HK_indexed` is rounded to whole €/m² before the next step. This reproduces the published worked example.
 
@@ -101,14 +105,18 @@ fw         = RND / GND
 AWM_%      = (1 − fw) × 100
 ```
 
-Modernization model (ImmoWertV, Anlage 2) if points > 1 and `Alter / GND ≤ maximum` for that point count:
+Baseline rule (ImmoWertV, Anlage 2, II.2): if `Alter / GND` is below the point-specific limit from Tabelle 3, use `RND = GND − Alter`. The limit is `abRelAlter` in `data.js`; it is defined for every point count from `0` to `20`.
+
+Modernization model (ImmoWertV, Anlage 2) if `Alter / GND >= abRelAlter` for the selected point count:
 
 ```text
 RND_modell = (a × Alter²) / GND − b × Alter + c × GND
 RND        = min(max(RND_modell, RND_linear), 1.7 × GND)
 ```
 
-Maximum modernization points: 20. Up to one point is treated as not modernized (SW-RL, Anlage 4).
+Maximum modernization points: 20. Anlage 2, Tabelle 1 distributes the points across the modernization measures. Tabelle 2 maps the total to the `Modernisierungsgrad`: `0–1 nicht modernisiert`, `2–5 kleine Modernisierungen im Rahmen der Instandhaltung`, `6–10 mittlerer Modernisierungsgrad`, `11–17 überwiegend modernisiert`, `18–20 umfassend modernisiert`.
+
+In the UI, each modernization category is entered with a `0 … max` integer slider. The badge shows `x / max Punkte`, and the paragraph below the slider shows the short German explanation (`Bedeutung: …`) plus a concrete example (`Beispiel: …`) for the selected point value. These texts are stored in `modernizationElements[].explanations` and `modernizationElements[].examples` in `data.js` and are orientation aids only; the formal point rules remain in Anlage 2, Tabelle 1. The PDF report repeats every category with its points, description and example, plus the weighted Ausstattungsstufe per Gewerk (NHK 2010), the total points, the resulting `Modernisierungsgrad` and the RND/AWM result.
 
 ---
 
@@ -183,7 +191,7 @@ Vorteil_Ersparnis    = jährliche_Ersparnis × Leibrentenbarwertfaktor
 Sachwert_mit_Wohnrecht = Nach_Unsicherheit + Vorteil_Ersparnis
 ```
 
-The model assumes the Bodenwert and the Sachwertfaktor remain unchanged until the right ends. Discount and annuity factors are external inputs because they depend on mortality tables and an object-specific interest rate.
+The model assumes the Bodenwert and the Sachwertfaktor remain unchanged until the right ends. Discount and annuity factors are external inputs because they depend on mortality tables and an object-specific interest rate. In the UI the whole section is disabled by default; it is calculated only when the Wohnungsrecht tickbox is checked.
 
 ---
 
